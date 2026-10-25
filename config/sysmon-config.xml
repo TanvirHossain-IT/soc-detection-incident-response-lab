@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Baseline learning configuration: capture broad telemetry locally. Tune before cloud ingestion. -->
+<Sysmon schemaversion="4.82">
+  <HashAlgorithms>sha256</HashAlgorithms>
+  <EventFiltering>
+    <RuleGroup name="SOC-Lab-Baseline" groupRelation="or">
+      <ProcessCreate onmatch="exclude" />
+      <NetworkConnect onmatch="exclude" />
+      <ProcessTerminate onmatch="exclude" />
+      <DnsQuery onmatch="exclude" />
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

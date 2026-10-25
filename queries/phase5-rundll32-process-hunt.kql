@@ -1,0 +1,11 @@
+// Phase 5: enumerate rundll32 process creations; do not equate execution with compromise.
+Event
+| where TimeGenerated > ago(30m)
+| where EventLog == "Microsoft-Windows-Sysmon/Operational"
+| where EventID == 1
+| extend ProcessImage = extract(@"(?i)Image:\s*(.*?\.exe)\b", 1, RenderedDescription)
+| extend CommandLine = extract(@"CommandLine:\s*(.*?)\s+CurrentDirectory:", 1, RenderedDescription)
+| extend ParentImage = extract(@"(?i)ParentImage:\s*(.*?\.exe)\b", 1, RenderedDescription)
+| where ProcessImage endswith @"\rundll32.exe"
+| project TimeGenerated, Computer, ProcessImage, CommandLine, ParentImage
+| order by TimeGenerated desc

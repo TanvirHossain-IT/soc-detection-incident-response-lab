@@ -1,0 +1,22 @@
+// PHASE 3: Confirm Sysmon Operational events are arriving in Log Analytics.
+// Source: own Windows 11 lab VM via Azure Arc + Azure Monitor Agent.
+// Run in Sentinel Logs against workspace law-soc-lab-01.
+
+// Query 1 — Inspect recent Sysmon events
+Event
+| where TimeGenerated > ago(24h)
+| where EventLog == "Microsoft-Windows-Sysmon/Operational"
+| where EventID in (1, 3, 22)
+| project TimeGenerated, Computer, EventID, RenderedDescription
+| order by TimeGenerated desc
+| take 20
+
+// Query 2 — Copy and run separately to get counts per event type
+// Event
+// | where TimeGenerated > ago(24h)
+// | where EventLog == "Microsoft-Windows-Sysmon/Operational"
+// | summarize EventCount = count() by EventID
+// | order by EventID asc
+
+// Snapshot results on 2026-10-25: Event ID 1 = 13, ID 3 = 142, ID 22 = 16.
+// These are benign/unscreened telemetry counts, NOT confirmed threat detections.

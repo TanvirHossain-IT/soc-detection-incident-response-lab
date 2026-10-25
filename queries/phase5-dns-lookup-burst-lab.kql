@@ -1,0 +1,14 @@
+// Phase 5: lab-only example.com DNS lookup burst detector.
+// Requires at least three distinct failed test-domain queries by one process/host.
+Event
+| where TimeGenerated > ago(30m)
+| where EventLog == "Microsoft-Windows-Sysmon/Operational"
+| where EventID == 22
+| extend Domain = extract(@"QueryName:\s*(\S+)", 1, RenderedDescription)
+| extend ProcessImage = extract(@"(?i)Image:\s*(.*?\.exe)\b", 1, RenderedDescription)
+| extend QueryStatus = extract(@"QueryStatus:\s*(\d+)", 1, RenderedDescription)
+| where QueryStatus == "9501"
+| where Domain startswith "soc-test-" and Domain endswith ".example.com"
+| summarize FailedLookups=count(), DistinctDomains=dcount(Domain), FirstSeen=min(TimeGenerated), TimeGenerated=max(TimeGenerated) by Computer, ProcessImage
+| where DistinctDomains >= 3
+| project TimeGenerated, Computer, ProcessImage, FailedLookups, DistinctDomains, FirstSeen

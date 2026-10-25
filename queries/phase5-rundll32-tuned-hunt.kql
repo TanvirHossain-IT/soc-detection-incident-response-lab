@@ -1,0 +1,19 @@
+// Phase 5: controlled false-positive tuning demonstration.
+// Exclude only two exact lab tests invoked from PowerShell; not for production deployment.
+Event
+| where TimeGenerated > ago(30m)
+| where EventLog == "Microsoft-Windows-Sysmon/Operational"
+| where EventID == 1
+| extend ProcessImage = extract(@"(?i)Image:\s*(.*?\.exe)\b", 1, RenderedDescription)
+| extend CommandLine = extract(@"CommandLine:\s*(.*?)\s+CurrentDirectory:", 1, RenderedDescription)
+| extend ParentImage = extract(@"(?i)ParentImage:\s*(.*?\.exe)\b", 1, RenderedDescription)
+| where ProcessImage endswith @"\rundll32.exe"
+| where not(
+    ParentImage endswith @"\powershell.exe"
+    and (
+        CommandLine endswith "shell32.dll,Control_RunDLL"
+        or CommandLine endswith "shell32.dll,Control_RunDLL appwiz.cpl"
+    )
+)
+| project TimeGenerated, Computer, ProcessImage, CommandLine, ParentImage
+| order by TimeGenerated desc

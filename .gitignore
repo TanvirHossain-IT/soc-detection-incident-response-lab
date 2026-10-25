@@ -1,0 +1,12 @@
+# Never commit secrets or raw private logs
+*.env
+.env*
+secrets/
+private/
+raw-logs/
+*.evtx
+*.etl
+*.pfx
+*.pem
+*.key
+*.p12

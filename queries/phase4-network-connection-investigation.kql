@@ -1,0 +1,14 @@
+// Phase 4: non-loopback, non-port-53 Sysmon Event ID 3 connections.
+// This is a hunt filter, NOT an authoritative definition of outbound traffic.
+Event
+| where TimeGenerated > ago(24h)
+| where EventLog == "Microsoft-Windows-Sysmon/Operational"
+| where EventID == 3
+| extend ProcessImage = extract(@"(?i)Image:\s*(.*?\.exe)\b", 1, RenderedDescription)
+| extend DestinationIp = extract(@"DestinationIp:\s*(\S+)", 1, RenderedDescription)
+| extend DestinationPort = toint(extract(@"DestinationPort:\s*(\d+)", 1, RenderedDescription))
+| where DestinationPort != 53
+| where DestinationIp !in ("127.0.0.1", "::1", "0:0:0:0:0:0:0:1")
+| summarize ConnectionCount=count(), LastSeen=max(TimeGenerated) by ProcessImage, DestinationIp, DestinationPort
+| order by ConnectionCount desc
+| take 20

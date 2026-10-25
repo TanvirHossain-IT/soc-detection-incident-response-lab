@@ -1,0 +1,14 @@
+// Phase 4: manual hunt; evidence confirmed via benign -EncodedCommand simulation.
+Event
+| where TimeGenerated > ago(24h)
+| where EventLog == "Microsoft-Windows-Sysmon/Operational"
+| where EventID == 1
+| extend ProcessImage = extract(@"Image:\s*(\S+)", 1, RenderedDescription)
+| extend CommandLine = extract(@"CommandLine:\s*(.*?)\s+CurrentDirectory:", 1, RenderedDescription)
+| where ProcessImage endswith @"\powershell.exe" or ProcessImage endswith @"\pwsh.exe"
+| where CommandLine contains "-EncodedCommand"
+    or CommandLine contains "DownloadString"
+    or CommandLine contains "Invoke-Expression"
+    or CommandLine contains "FromBase64String"
+| project TimeGenerated, Computer, ProcessImage, CommandLine
+| order by TimeGenerated desc
